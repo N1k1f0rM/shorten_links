@@ -1,0 +1,11 @@
+alembic
+sqlalchemy
+fastapi
+fastapi-users
+celery
+redis
+asyncpg
+psycopg2-binary
+dotenv
+pydantic
+uvicorn

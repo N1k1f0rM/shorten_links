@@ -1,0 +1,11 @@
+.venv/
+
+.DS_Store
+
+.idea/
+
+.env
+
+/migration/README
+
+__pycache__/
