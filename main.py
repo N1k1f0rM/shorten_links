@@ -5,13 +5,6 @@ import uvicorn
 
 
 app = FastAPI()
-router = APIRouter(prefix="/get_reg")
-
-app.include_router(router)
-
-#
-# fastapi_users = FastAPIUsers[Users, uuid.UUID]()
-
 
 
 @app.get("/protected")
