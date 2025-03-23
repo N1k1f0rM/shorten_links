@@ -1,7 +1,7 @@
 alembic
 sqlalchemy
 fastapi
-fastapi-users
+fastapi-users[sqlalchemy]
 celery
 redis
 asyncpg
