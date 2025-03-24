@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, TIMESTAMP, Boolean, ForeignKey, func
 from datetime import datetime
+from typing import Optional
 
 from config import DB_USER, DB_PASS, DB_HOST, DB_NAME, DB_PORT
 
@@ -39,8 +40,10 @@ class Link(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
     long_url: Mapped[str] = mapped_column(String, nullable=False)
     short_url: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[datetime.timestamp]= mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
-
+    created_at: Mapped[datetime.timestamp] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
+    views: Mapped[int] = mapped_column(Integer, default=0)
+    custom_alias: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
     user = relationship("User", back_populates="links")
 
 

@@ -2,6 +2,7 @@ alembic
 sqlalchemy
 fastapi
 fastapi-users[sqlalchemy]
+fastapi-cache2
 celery
 redis
 asyncpg
