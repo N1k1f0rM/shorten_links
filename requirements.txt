@@ -3,6 +3,8 @@ sqlalchemy
 fastapi
 fastapi-users[sqlalchemy]
 fastapi-cache2
+eventlet
+flower
 celery
 redis
 asyncpg
@@ -10,3 +12,4 @@ psycopg2-binary
 dotenv
 pydantic
 uvicorn
+celery-redbeat

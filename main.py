@@ -1,9 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi_users import FastAPIUsers
-from redis import asyncio as aioredis
 import uuid
 import uvicorn
-from sqlalchemy.sql.operators import all_op
 
 from auth.auth import auth_backend
 from auth.manager import get_user_manager
@@ -37,6 +35,13 @@ current_active_user = fastapi_users.current_user()
 @app.on_event("startup")
 async def startup():
     await init_cache()
+
+
+# @app.post("/clean_up")
+# async def manual_clear():
+#     task = celery.send_task("cleanup_task")
+#     return {"task_id": task.id}
+
 
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):

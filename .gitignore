@@ -9,3 +9,6 @@
 /migration/README
 
 __pycache__/
+
+
+later/celerybeat-schedule.db

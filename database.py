@@ -2,8 +2,8 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, TIMESTAMP, Boolean, ForeignKey, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
+from sqlalchemy import Integer, String, TIMESTAMP, Boolean, ForeignKey, func, create_engine
 from datetime import datetime
 from typing import Optional
 
@@ -39,7 +39,7 @@ class Link(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
     long_url: Mapped[str] = mapped_column(String, nullable=False)
-    short_url: Mapped[str] = mapped_column(String, nullable=False)
+    short_url: Mapped[str] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime.timestamp] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
     views: Mapped[int] = mapped_column(Integer, default=0)
     custom_alias: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
@@ -47,8 +47,13 @@ class Link(Base):
     user = relationship("User", back_populates="links")
 
 
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+async_engine = create_async_engine(DATABASE_URL)
+async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
+
+sync_engine = create_engine(DATABASE_URL)
+sync_session_maker = sessionmaker(sync_engine,
+                                  expire_on_commit=False,
+                                  autoflush=False)
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
