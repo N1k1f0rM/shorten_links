@@ -1,17 +1,21 @@
 from fastapi import FastAPI, Depends
 from fastapi_users import FastAPIUsers
+from redis import asyncio as aioredis
 import uuid
 import uvicorn
+from sqlalchemy.sql.operators import all_op
 
 from auth.auth import auth_backend
 from auth.manager import get_user_manager
 from auth.schemas import UserRead, UserCreate
+from cache import init_cache
 from shorten.router import router as shorty
 
 from database import User
 
 
 app = FastAPI()
+
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
 
@@ -28,6 +32,11 @@ app.include_router(
 app.include_router(shorty)
 
 current_active_user = fastapi_users.current_user()
+
+
+@app.on_event("startup")
+async def startup():
+    await init_cache()
 
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):

@@ -3,6 +3,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_users import FastAPIUsers
 from fastapi.responses import RedirectResponse
+from fastapi_cache.decorator import cache
+from redis import asyncio as aioredis
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.ddl import DropTable
@@ -56,7 +58,10 @@ async def create_short_link(
         if existing:
             raise HTTPException(409, "Alias already exists")
 
-    short_code = f"{request.custom_alias}.short" or generate_short()
+    if request.custom_alias:
+        short_code = f"{request.custom_alias}.short"
+    else:
+        short_code = generate_short()
 
 
     if request.expires_at and request.expires_at < datetime.now():
@@ -75,23 +80,32 @@ async def create_short_link(
     return link
 
 
+
 @router.get("/{short_code}")
+@cache(expire=6000)
 async def redicrect_from_short(short_code: str,
                                session: AsyncSession = Depends(get_async_session)):
+
     link = await session.scalar(select(Link).filter((Link.short_url == short_code) | (Link.custom_alias == short_code)))
 
     if not link:
         raise HTTPException(404, "No such link")
 
-    if link.expires_at and link.expires_at < datetime.now():
+    if link.expires_at and (link.expires_at < datetime.now()):
         raise HTTPException(410, "URL expired")
 
     link.views += 1
 
     await session.commit()
 
-    if link.expires_at and link.expires_at < datetime.now():
-        raise HTTPException(410, "URL expired:((")
+    redis_clicks = aioredis.from_url("redis://localhost:6379/1")
+    click_count = await redis_clicks.incr(f"clicks:{short_code}")
+
+    if click_count >= 3:
+        link = await session.scalar(select(Link).where((Link.short_url == short_code) | (Link.custom_alias == short_code)))
+
+    redis_cache = aioredis.from_url("redis://localhost:6379/0")
+    await redis_cache.setex(name=f"cache:{short_code}", value=link.long_url, time=6000)
 
     return RedirectResponse(link.long_url)
 
